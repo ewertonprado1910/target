@@ -8,7 +8,9 @@ import {
 
 
 import { styles } from "./styles"
+
 import { Separator } from "../Separator"
+
 import { colors } from "@/theme"
 
 type Props<T> = FlatListProps<T> & {
@@ -42,9 +44,6 @@ export function List<T>({
                 )}
                 {...rest}
             />
-
-
-
         </View>
     )
 }

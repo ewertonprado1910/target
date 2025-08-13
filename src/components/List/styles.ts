@@ -6,11 +6,6 @@ export const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    listContent: {
-        paddingBottom: 72,
-        gap: 16,
-        paddingTop: 16
-    },
     title: {
         marginTop: 25,
         paddingBottom: 16,
@@ -19,6 +14,11 @@ export const styles = StyleSheet.create({
         fontSize: 17,
         fontFamily: fontFamily.regular,
         color: colors.black,
+    },
+    listContent: {
+        paddingBottom: 72,
+        gap: 16,
+        paddingTop: 16
     },
     empty: {
         fontSize: 14,
