@@ -6,6 +6,7 @@ import { colors } from "@/theme"
 import { Target } from "@/components/Target"
 import { List } from "@/components/List"
 import { Button } from "@/components/Button"
+import { LinearGradient } from "expo-linear-gradient"
 
 const summary = {
     total: "R$ 2.567,25",
@@ -41,7 +42,10 @@ const targets = [
 export default function Index() {
     return (
         <View style={{ flex: 1 }}>
-            <StatusBar barStyle="dark-content" backgroundColor={colors.blue[250]} />
+            <LinearGradient colors={[colors.blue[250], colors.blue[800]]}>
+                <StatusBar barStyle="light-content"/>
+            </LinearGradient>
+
             <HomeHeader data={summary} />
 
             <List
@@ -54,7 +58,7 @@ export default function Index() {
                 emptyMessage="Não a metas por enquanto..."
                 containerStyle={{ paddingHorizontal: 24 }}
             />
-            <View style={{ padding: 24, paddingBottom: 30 }}>
+            <View style={{ padding: 24, paddingBottom: 40 }}>
                 <Button title="Nova Meta" onPress={() => router.navigate("/target")} />
             </View>
 

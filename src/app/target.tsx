@@ -5,10 +5,9 @@ import { StatusBar, View } from "react-native"
 import { Button } from "@/components/Button"
 import { Input } from "@/components/Input"
 import { PagesHeader } from "@/components/PagesHeader"
+import { CurrencyInput } from "@/components/CurrencyInput"
 
 import { colors } from "@/theme"
-
-
 
 export default function Target() {
     return (
@@ -25,6 +24,7 @@ export default function Target() {
                     label="Nome da meta"
                     placeholder="Ex: Vaigem para praia..."
                 />
+                <CurrencyInput label="Valor alvo" value={0}/>
                 <Button title="Salvar" />
             </View>
 

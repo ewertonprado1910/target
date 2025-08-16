@@ -17,8 +17,6 @@ export const styles = StyleSheet.create({
     },
     listContent: {
         paddingBottom: 72,
-        gap: 16,
-        paddingTop: 16
     },
     empty: {
         fontSize: 14,
