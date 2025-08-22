@@ -1,12 +1,21 @@
-import { router } from "expo-router"
-import { View, StatusBar } from "react-native"
+import { useCallback, useState } from "react"
+import { router, useFocusEffect } from "expo-router"
+import { View, StatusBar, Alert } from "react-native"
+import { LinearGradient } from "expo-linear-gradient"
 
 import { HomeHeader } from "@/components/HomeHeader"
-import { colors } from "@/theme"
-import { Target } from "@/components/Target"
+import { Target, TargetProps } from "@/components/Target"
 import { List } from "@/components/List"
 import { Button } from "@/components/Button"
-import { LinearGradient } from "expo-linear-gradient"
+import { Loading } from "@/components/Loading"
+
+import { colors } from "@/theme"
+
+import { numberToCurrency } from "@/utils/numberToCurrency"
+
+import { useTargetDatabase } from "@/database/useTargetDatabase"
+
+
 
 const summary = {
     total: "R$ 2.567,25",
@@ -14,36 +23,57 @@ const summary = {
     output: { label: "Saida", value: "-R$ 850.75" }
 }
 
-const targets = [
-    {
-        id: "1",
-        name: "Apple Watch",
-        porcentage: "50%",
-        current: "R$ 580.00",
-        target: "R$ 1790.00"
-    },
-    {
-        id: "2",
-        name: "Comprar um Celular",
-        porcentage: "80%",
-        current: "R$ 580.00",
-        target: "R$ 1.790.00"
-    },
-    {
-        id: "3",
-        name: "Comprar um colchão",
-        porcentage: "80%",
-        current: "R$ 580.00",
-        target: "R$ 1790.00"
-    }
-
-]
 
 export default function Index() {
+    const [isFetching, setIsFatching] = useState(true)
+    const [targets, setTargets] = useState<TargetProps[]>([])
+
+    const targetDataBase = useTargetDatabase()
+
+
+    async function fetchTargets(): Promise<TargetProps[]> {
+        try {
+            const response = await targetDataBase.listBySavedValue()
+
+            return response.map((item) => ({
+                id: String(item.id),
+                name: item.name,
+                current: numberToCurrency(item.current),
+                percentage: item.percentage.toFixed(0) + "%",
+                target: numberToCurrency(item.amount)
+            }))
+
+
+        } catch (error) {
+            Alert.alert("Erro", "Não foi possível carregar as metas.")
+        }
+    }
+
+    async function fatchData() {
+        const targetDataPromise = fetchTargets()
+
+        const [targetData] = await Promise.all([targetDataPromise])
+
+        setTargets(targetData)
+        setIsFatching(false)
+    }
+
+    useFocusEffect(
+        useCallback(() => {
+            fatchData()
+        }, [])
+
+    )
+
+    if (isFetching) {
+        return <Loading />
+    }
+
+
     return (
         <View style={{ flex: 1 }}>
             <LinearGradient colors={[colors.blue[250], colors.blue[800]]}>
-                <StatusBar barStyle="light-content"/>
+                <StatusBar barStyle="light-content" />
             </LinearGradient>
 
             <HomeHeader data={summary} />

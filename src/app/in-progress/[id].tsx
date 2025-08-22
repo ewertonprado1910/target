@@ -1,19 +1,22 @@
-import { router, useLocalSearchParams } from "expo-router"
-import { View } from "react-native"
+import { Alert, View } from "react-native"
+import { useCallback, useState } from "react"
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router"
 
-import { PagesHeader } from "@/components/PagesHeader"
-import { Progress } from "@/components/Progress"
+
 import { List } from "@/components/List"
-import { Transaction, TransactionProps } from "@/components/Transaction"
 import { Button } from "@/components/Button"
+import { Loading } from "@/components/Loading"
+import { Progress } from "@/components/Progress"
+import { PagesHeader } from "@/components/PagesHeader"
+import { Transaction, TransactionProps } from "@/components/Transaction"
+
 
 import { TransactionTypes } from "@/utils/TransactionTypes"
 
-const details = {
-    current: "R$ 580,00",
-    target: "R$ 1.790,00",
-    percentage: 50
-}
+import { numberToCurrency } from "@/utils/numberToCurrency"
+
+import { useTargetDatabase } from "@/database/useTargetDatabase"
+
 
 const transactions: TransactionProps[] = [
     {
@@ -33,15 +36,62 @@ const transactions: TransactionProps[] = [
 ]
 
 export default function InProgress() {
+    const [isFetching, setIsFetching] = useState(true)
+
+    const [details, setDetails] = useState({
+        name: "",
+        current: "R$ 0,00",
+        target: "R$ 0,00",
+        percentage: 0,
+    })
+
     const params = useLocalSearchParams<{ id: string }>()
+
+    const targetDatabase = useTargetDatabase()
+
+
+    async function fetchDetails() {
+        try {
+            const response = await targetDatabase.showTarget(Number(params.id))
+
+            setDetails({
+                name: response.name,
+                current: numberToCurrency(response.current),
+                target: numberToCurrency(response.amount),
+                percentage: response.percentage
+            })
+
+        } catch (error) {
+            Alert.alert("Erro", "Não foi possível carregar a meta.")
+        }
+
+    }
+
+    async function fetchData() {
+        const fetchDetailsPromise = fetchDetails()
+
+        await Promise.all([fetchDetailsPromise])
+        setIsFetching(false)
+    }
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchData()
+        }, [])
+
+    )
+
+    if (isFetching) {
+        return <Loading />
+    }
 
     return (
         <View style={{ flex: 1, padding: 20, gap: 32 }}>
             <PagesHeader
-                title="Apple Wath"
+                title={details.name}
                 rightButton={{
                     icon: "edit",
-                    onPress: () => { }
+                    onPress: () => router.navigate(`/target?id=${params.id}`)
                 }}
             />
             <Progress data={details} />

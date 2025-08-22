@@ -7,7 +7,7 @@ import { styles } from "./styles"
 export type TargetProps = {
     id?: string
     name: string
-    porcentage: string
+    percentage: string
     current: string
     target: string
 }
@@ -26,7 +26,7 @@ export function Target({ data, ...rest }: Props) {
                 </Text>
 
                 <Text style={styles.status}>
-                    {data.porcentage} • {data.current} de {data.target}
+                    {data.percentage} • {data.current} de {data.target}
                 </Text>
             </View>
             <MaterialIcons name="chevron-right" size={20} />
