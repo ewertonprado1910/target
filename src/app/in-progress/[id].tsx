@@ -16,26 +16,11 @@ import { TransactionTypes } from "@/utils/TransactionTypes"
 import { numberToCurrency } from "@/utils/numberToCurrency"
 
 import { useTargetDatabase } from "@/database/useTargetDatabase"
+import { useTransactionsDatabase } from "@/database/useTransactionsDatabase"
 
-
-const transactions: TransactionProps[] = [
-    {
-        id: "1",
-        value: "R$ 300,00",
-        date: "12/04/2025",
-        description: "CDB de 100% no banco inter",
-        type: TransactionTypes.Output
-    },
-    {
-        id: "2",
-        value: "R$ 400,00",
-        date: "15/04/2025",
-        description: "CDB de 100% no banco Itau",
-        type: TransactionTypes.Input
-    }
-]
 
 export default function InProgress() {
+    const [transactions, setTransactions] = useState<TransactionProps[]>([])
     const [isFetching, setIsFetching] = useState(true)
 
     const [details, setDetails] = useState({
@@ -48,9 +33,10 @@ export default function InProgress() {
     const params = useLocalSearchParams<{ id: string }>()
 
     const targetDatabase = useTargetDatabase()
+    const transactionsDatabase = useTransactionsDatabase()
 
 
-    async function fetchDetails() {
+    async function fetchTargetDetails() {
         try {
             const response = await targetDatabase.showTarget(Number(params.id))
 
@@ -67,10 +53,31 @@ export default function InProgress() {
 
     }
 
-    async function fetchData() {
-        const fetchDetailsPromise = fetchDetails()
+    async function fetchTransitions() {
+        try {
+            const response = await transactionsDatabase.listByTargetId
+                (Number(params.id))
 
-        await Promise.all([fetchDetailsPromise])
+            setTransactions(
+                response.map((item) => ({
+                    id: String(item.id),
+                    value: numberToCurrency(item.amount),
+                    date: String(item.created_at),
+                    description: item.observation,
+                    type: item.amount < 0 ? TransactionTypes.Output : TransactionTypes.Input
+                }))
+            )
+        } catch (error) {
+            Alert.alert("Erro", "Erro ao carregar as transações")
+            console.log(error)
+        }
+    }
+
+    async function fetchData() {
+        const fetchDetailsPromise = fetchTargetDetails()
+        const fetchTransitionsPromise = fetchTransitions()
+
+        await Promise.all([fetchDetailsPromise, fetchTransitionsPromise])
         setIsFetching(false)
     }
 

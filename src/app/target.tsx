@@ -79,8 +79,8 @@ export default function Target() {
         if (!params.id) {
             return
         }
-        Alert.alert("Remover", "Deseja realmente remover a meta?", [
-            { text: "Não", style: "cancel" },
+        Alert.alert("Excluir?", "Deseja realmente excluir a meta?", [
+            { text: "Não", style: "cancel", },
             { text: "Sim", onPress: removeTarget }
         ])
     }
