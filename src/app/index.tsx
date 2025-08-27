@@ -3,7 +3,7 @@ import { router, useFocusEffect } from "expo-router"
 import { View, StatusBar, Alert } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 
-import { HomeHeader } from "@/components/HomeHeader"
+import { HomeHeader, HomeHeaderProps } from "@/components/HomeHeader"
 import { Target, TargetProps } from "@/components/Target"
 import { List } from "@/components/List"
 import { Button } from "@/components/Button"
@@ -14,21 +14,16 @@ import { colors } from "@/theme"
 import { numberToCurrency } from "@/utils/numberToCurrency"
 
 import { useTargetDatabase } from "@/database/useTargetDatabase"
-
-
-
-const summary = {
-    total: "R$ 2.567,25",
-    input: { label: "Entrada", value: "R$ 6.184,90" },
-    output: { label: "Saida", value: "-R$ 850.75" }
-}
+import { useTransactionsDatabase } from "@/database/useTransactionsDatabase"
 
 
 export default function Index() {
+    const [summary, setSummary] = useState<HomeHeaderProps>()
     const [isFetching, setIsFatching] = useState(true)
     const [targets, setTargets] = useState<TargetProps[]>([])
 
     const targetDataBase = useTargetDatabase()
+    const transactionsDatabase = useTransactionsDatabase()
 
 
     async function fetchTargets(): Promise<TargetProps[]> {
@@ -49,13 +44,40 @@ export default function Index() {
         }
     }
 
+    async function fatchSumarry(): Promise<HomeHeaderProps> {
+        try {
+            const response = await transactionsDatabase.summary()
+
+            return {
+                total: numberToCurrency(response.input + response.output),
+                input: {
+                    label: "Entradas",
+                    value: numberToCurrency(response.input)
+                },
+                output: {
+                    label: "Saidas",
+                    value: numberToCurrency(response.output)
+                }
+            }
+
+        } catch (error) {
+            Alert.alert("Erro", "Erro ao carregar o resumo!")
+            console.log(error)
+        }
+    }
+
     async function fatchData() {
         const targetDataPromise = fetchTargets()
+        const dataSumarryPromise = fatchSumarry()
 
-        const [targetData] = await Promise.all([targetDataPromise])
+        const [targetData, dataSummary] = await Promise.all(
+            [targetDataPromise, dataSumarryPromise])
 
         setTargets(targetData)
+        setSummary(dataSummary)
+
         setIsFatching(false)
+
     }
 
     useFocusEffect(

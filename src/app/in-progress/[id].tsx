@@ -1,7 +1,7 @@
 import { Alert, View } from "react-native"
 import { useCallback, useState } from "react"
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router"
-
+import dayjs from "dayjs"
 
 import { List } from "@/components/List"
 import { Button } from "@/components/Button"
@@ -53,7 +53,7 @@ export default function InProgress() {
 
     }
 
-    async function fetchTransitions() {
+    async function fetchTransactions() {
         try {
             const response = await transactionsDatabase.listByTargetId
                 (Number(params.id))
@@ -62,7 +62,7 @@ export default function InProgress() {
                 response.map((item) => ({
                     id: String(item.id),
                     value: numberToCurrency(item.amount),
-                    date: String(item.created_at),
+                    date: dayjs(item.created_at).format("DD/MM/YYYY [á] HH:mm"),
                     description: item.observation,
                     type: item.amount < 0 ? TransactionTypes.Output : TransactionTypes.Input
                 }))
@@ -75,10 +75,29 @@ export default function InProgress() {
 
     async function fetchData() {
         const fetchDetailsPromise = fetchTargetDetails()
-        const fetchTransitionsPromise = fetchTransitions()
+        const fetchTransactionsPromise = fetchTransactions()
 
-        await Promise.all([fetchDetailsPromise, fetchTransitionsPromise])
+        await Promise.all([fetchDetailsPromise, fetchTransactionsPromise])
         setIsFetching(false)
+    }
+
+    function handleTransactionRemove(id: string) {
+
+        Alert.alert("Excluir?", "Tem certeza que deseja excluir a transação?", [
+            { text: "Não", style: "cancel" },
+            { text: "Sim", onPress: () => transactionRemove(id) }
+        ])
+    }
+
+    async function transactionRemove(id: string) {
+        try {
+            await transactionsDatabase.remove(Number(id))
+            fetchData()
+            Alert.alert("Excluida.", "Transação exluida com sucesso!")
+
+        } catch (error) {
+            Alert.alert("Erro", "Erro ao excluir a transação!")
+        }
     }
 
     useFocusEffect(
@@ -108,13 +127,16 @@ export default function InProgress() {
                 renderItem={({ item }) => (
                     <Transaction
                         data={item}
-                        onRemove={() => { }} />
+                        onRemove={() => handleTransactionRemove(item.id)} />
                 )}
                 emptyMessage="Nenhuma transação, toque em nova transação para fazer uma nova!"
             />
-            <Button title="Nova Transação"
-                onPress={() => router.navigate(`/transaction/${params.id}`)}
-            />
+            <View style={{marginBottom: 20}}>
+                <Button title="Nova Transação"
+                    onPress={() => router.navigate(`/transaction/${params.id}`)}
+                />
+            </View>
+
         </View>
     )
 }
